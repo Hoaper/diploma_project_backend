@@ -1,11 +1,13 @@
 from models.apartment import ApartmentCreate, ApartmentResponse, ApartmentUpdate
 from repositories.apartment_repository import ApartmentRepository
+from repositories.booking_repository import BookingRepository
 from fastapi import HTTPException
 from datetime import datetime
 
 class ApartmentService:
-    def __init__(self, apartment_repository: ApartmentRepository):
+    def __init__(self, apartment_repository: ApartmentRepository, booking_repository: BookingRepository):
         self.repository = apartment_repository
+        self.booking_repository = booking_repository
 
     async def create_apartment(self, apartment: ApartmentCreate) -> ApartmentResponse:
         apartment_dict = apartment.dict()
@@ -50,4 +52,21 @@ class ApartmentService:
         return [
             ApartmentResponse(**{**apartment, "id": str(apartment["_id"])})
             for apartment in apartments
-        ] 
+        ]
+
+    async def check_booking_availability(self, apartment_id: str) -> bool:
+        # Проверяем существование апартаментов
+        apartment = await self.repository.find_one(apartment_id)
+        if not apartment:
+            raise HTTPException(status_code=404, detail="Апартаменты не найдены")
+
+        # Получаем все активные бронирования для апартаментов
+        active_bookings = await self.booking_repository.find_by_query({
+            "apartment_id": apartment_id,
+            "status": {"$ne": "reject"}  # Исключаем отклоненные бронирования
+        })
+
+        # Проверяем количество активных бронирований
+        if len(active_bookings) >= apartment["max_occupants"]:
+            return False
+        return True 

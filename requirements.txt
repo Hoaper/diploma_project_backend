@@ -1,9 +1,10 @@
 fastapi
 uvicorn
-motor
+motor==3.3.2
 python-dotenv
 pydantic
 email-validator
 python-jose
 passlib
 python-multipart
+pymongo==4.6.1

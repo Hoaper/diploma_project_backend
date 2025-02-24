@@ -12,6 +12,8 @@ class BookingStatus(str, Enum):
 class BookingBase(BaseModel):
     apartment_id: str = Field(...)
     user_id: str = Field(...)
+    status: BookingStatus = Field(default=BookingStatus.WAITING)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
 
 class BookingCreate(BookingBase):
     pass
@@ -21,8 +23,6 @@ class BookingUpdate(BaseModel):
 
 class BookingResponse(BookingBase):
     id: str
-    status: BookingStatus
-    created_at: datetime
 
     class Config:
         orm_mode = True 
