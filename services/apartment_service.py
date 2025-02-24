@@ -63,10 +63,10 @@ class ApartmentService:
         # Получаем все активные бронирования для апартаментов
         active_bookings = await self.booking_repository.find_by_query({
             "apartment_id": apartment_id,
-            "status": {"$ne": "reject"}  # Исключаем отклоненные бронирования
+            "status": {"$ne": "reject"}  # !!! Исключаем отклоненные бронирования
         })
 
-        # Проверяем количество активных бронирований
+        # Проверяем количество активных бронирований, если больше лимита то отм
         if len(active_bookings) >= apartment["max_occupants"]:
             return False
         return True 
