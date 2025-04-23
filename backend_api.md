@@ -49,8 +49,9 @@ Authorization: Bearer <jwt_token>
     "min": 50000,
     "max": 90000
   },
-  "avatar_url": "https://cdn.domain.com/avatar.jpg",
-  "id_document_url": "https://cdn.domain.com/id.png",
+  "avatar_url": "https://cdn.domain.com/avatar.jpg", // File 
+  "id_document_url": "https://cdn.domain.com/id.png", // File
+  // мб еще хз добавишь что то но эти поля сверху чутька я буду там загружать File
   "document_verified": true,
   "social_links": {
     "telegram": "@diyar",
