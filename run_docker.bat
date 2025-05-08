@@ -1,7 +1,7 @@
 @echo off
 set /p VERSION=<version.txt
 echo Building Docker image diploma-rest:%VERSION%...
-docker build -t diploma-rest:%VERSION% .
+docker build -f Dockerfile.dev -t diploma-rest:%VERSION% .
 
 echo Checking for existing container...
 docker ps -a | findstr "diploma-rest" >nul

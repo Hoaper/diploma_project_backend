@@ -1,7 +1,7 @@
 #!/bin/bash
 VERSION=$(cat version.txt)
 echo "Building Docker image diploma-rest:${VERSION}..."
-docker build -t diploma-rest:${VERSION} .
+docker build -f Dockerfile.dev -t diploma-rest:${VERSION} .
 
 echo "Checking for existing container..."
 if [ "$(docker ps -a -q -f name=diploma-rest)" ]; then
