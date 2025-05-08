@@ -20,6 +20,11 @@ uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
 ### Using docker 
+Windows:
 ```bash
-docker compose up --build
+run_docker.bat
+```
+MacOS/Linux:
+```bash
+run_docker.sh
 ```
