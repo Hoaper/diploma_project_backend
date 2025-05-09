@@ -11,13 +11,6 @@ class UserService(BaseService[User]):
     def __init__(self, user_repository: UserRepository):
         self.user_repository = user_repository
 
-    async def get_by_id(self, entity_id: str) -> Optional[User]:
-        try:
-            return await self.user_repository.get_by_id(entity_id)
-        except ValueError as e:
-            logger.error(f"Error getting user by ID {entity_id}: {str(e)}")
-            return None
-
     async def get_all(self, skip: int = 0, limit: int = 10) -> List[User]:
         return await self.user_repository.get_all(skip, limit)
 

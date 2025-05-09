@@ -71,8 +71,7 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Security(
     except JWTError:
         raise credentials_exception
     
-    user = await user_service.get_by_id(userId)
-    print(f"userId: {userId} user is :", user)
+    user = await user_service.get_user_by_id(userId)
     if user is None:
         raise credentials_exception
     return user 
