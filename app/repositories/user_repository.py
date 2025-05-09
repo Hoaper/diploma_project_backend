@@ -16,17 +16,13 @@ class UserRepository(BaseRepository[User]):
         entity_dict["createdAt"] = datetime.utcnow()
         entity_dict["updatedAt"] = datetime.utcnow()
         result = await self.collection.insert_one(entity_dict)
-        entity_dict["userId"] = str(result.inserted_id)
-        return User(**entity_dict)
+        entity_dict["_id"] = result.inserted_id
+        return User.from_mongo(entity_dict)
 
     async def get_by_id(self, entity_id: str) -> Optional[User]:
         try:
             result = await self.collection.find_one({"_id": ObjectId(entity_id)})
-            if result:
-                result["userId"] = str(result["_id"])
-                del result["_id"]
-                return User(**result)
-            return None
+            return User.from_mongo(result) if result else None
         except Exception as e:
             logger.error(f"Error getting user by ID {entity_id}: {str(e)}")
             return None
@@ -35,8 +31,7 @@ class UserRepository(BaseRepository[User]):
         cursor = self.collection.find().skip(skip).limit(limit)
         users = []
         async for document in cursor:
-            document["userId"] = str(document["_id"])
-            users.append(User(**document))
+            users.append(User.from_mongo(document))
         return users
 
     async def update(self, entity_id: str, entity_data: dict) -> Optional[User]:
@@ -47,10 +42,7 @@ class UserRepository(BaseRepository[User]):
                 {"$set": entity_data},
                 return_document=True
             )
-            if result:
-                result["userId"] = str(result["_id"])
-                return User(**result)
-            return None
+            return User.from_mongo(result) if result else None
         except Exception as e:
             logger.error(f"Error updating user {entity_id}: {str(e)}")
             return None
@@ -65,10 +57,7 @@ class UserRepository(BaseRepository[User]):
 
     async def get_by_email(self, email: str) -> Optional[User]:
         result = await self.collection.find_one({"email": email})
-        if result:
-            result["userId"] = str(result["_id"])
-            return User(**result)
-        return None
+        return User.from_mongo(result) if result else None
 
     async def update_last_login(self, user_id: str) -> Optional[User]:
         try:
@@ -77,10 +66,7 @@ class UserRepository(BaseRepository[User]):
                 {"$set": {"last_login": datetime.utcnow()}},
                 return_document=True
             )
-            if result:
-                result["userId"] = str(result["_id"])
-                return User(**result)
-            return None
+            return User.from_mongo(result) if result else None
         except Exception as e:
             logger.error(f"Error updating last login for user {user_id}: {str(e)}")
             return None
@@ -89,8 +75,7 @@ class UserRepository(BaseRepository[User]):
         cursor = self.collection.find({"is_landlord": True}).skip(skip).limit(limit)
         users = []
         async for document in cursor:
-            document["userId"] = str(document["_id"])
-            users.append(User(**document))
+            users.append(User.from_mongo(document))
         return users
 
     async def verify_landlord(self, user_id: str) -> Optional[User]:
@@ -105,10 +90,7 @@ class UserRepository(BaseRepository[User]):
                 },
                 return_document=True
             )
-            if result:
-                result["userId"] = str(result["_id"])
-                return User(**result)
-            return None
+            return User.from_mongo(result) if result else None
         except Exception as e:
             logger.error(f"Error verifying landlord {user_id}: {str(e)}")
             return None
@@ -117,6 +99,5 @@ class UserRepository(BaseRepository[User]):
         cursor = self.collection.find({"university": university}).skip(skip).limit(limit)
         users = []
         async for document in cursor:
-            document["userId"] = str(document["_id"])
-            users.append(User(**document))
+            users.append(User.from_mongo(document))
         return users 

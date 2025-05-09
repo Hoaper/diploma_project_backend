@@ -12,7 +12,11 @@ class UserService(BaseService[User]):
         self.user_repository = user_repository
 
     async def get_by_id(self, entity_id: str) -> Optional[User]:
-        return await self.user_repository.get_by_id(entity_id)
+        try:
+            return await self.user_repository.get_by_id(entity_id)
+        except ValueError as e:
+            logger.error(f"Error getting user by ID {entity_id}: {str(e)}")
+            return None
 
     async def get_all(self, skip: int = 0, limit: int = 10) -> List[User]:
         return await self.user_repository.get_all(skip, limit)
@@ -58,13 +62,6 @@ class UserService(BaseService[User]):
             return await self.user_repository.update_last_login(user_id)
         except ValueError as e:
             logger.error(f"Error updating last login for user {user_id}: {str(e)}")
-            return None
-
-    async def get_user_by_id(self, user_id: str) -> Optional[User]:
-        try:
-            return await self.user_repository.get_by_id(user_id)
-        except ValueError as e:
-            logger.error(f"Error getting user by ID {user_id}: {str(e)}")
             return None
 
     async def create_user(self, user: User) -> User:

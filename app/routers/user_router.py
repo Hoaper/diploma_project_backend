@@ -43,19 +43,12 @@ async def update_user_profile(
         raise HTTPException(status_code=404, detail="User not found")
     return {"message": "Profile updated successfully."}
 
-@router.post("/", response_model=User)
-async def create_user(
-    user: User,
-    user_service: UserService = Depends(get_user_service)
-):
-    return await user_service.create_user(user)
-
 @router.get("/{user_id}", response_model=User)
 async def get_user(
     user_id: str,
     user_service: UserService = Depends(get_user_service)
 ):
-    user = await user_service.get_user_by_id(user_id)
+    user = await user_service.get_by_id(user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user

@@ -28,7 +28,7 @@ class SocialLinks(BaseModel):
     facebook: Optional[str] = None
 
 class User(BaseModel):
-    userId: Optional[str] = Field(alias="_id", default=None)
+    userId: Optional[str] = None
     name: Optional[str] = None
     email: EmailStr
     password: Optional[str] = None
@@ -61,4 +61,11 @@ class User(BaseModel):
         arbitrary_types_allowed = True
         json_encoders = {
             ObjectId: str
-        } 
+        }
+
+    @classmethod
+    def from_mongo(cls, data: dict):
+        if not data:
+            return None
+        id = data.pop('_id', None)
+        return cls(**dict(data, userId=str(id))) 

@@ -1,6 +1,22 @@
 from datetime import datetime
 from typing import Optional, List
 from pydantic import BaseModel, HttpUrl
+from bson import ObjectId
+
+class PyObjectId(ObjectId):
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, v):
+        if not ObjectId.is_valid(v):
+            raise ValueError("Invalid ObjectId")
+        return ObjectId(v)
+
+    @classmethod
+    def __modify_schema__(cls, field_schema):
+        field_schema.update(type="string")
 
 class Address(BaseModel):
     street: str
@@ -11,7 +27,7 @@ class Address(BaseModel):
     landmark: Optional[str] = None
 
 class Apartment(BaseModel):
-    apartmentId: str
+    apartmentId: Optional[str] = None
     ownerId: str
     apartment_name: str
     description: str
@@ -39,4 +55,18 @@ class Apartment(BaseModel):
     contact_telegram: Optional[str] = None
     created_at: datetime
     updated_at: datetime
-    is_active: bool = True 
+    is_active: bool = True
+
+    class Config:
+        allow_population_by_field_name = True
+        arbitrary_types_allowed = True
+        json_encoders = {
+            ObjectId: str
+        }
+
+    @classmethod
+    def from_mongo(cls, data: dict):
+        if not data:
+            return None
+        id = data.pop('_id', None)
+        return cls(**dict(data, apartmentId=str(id))) 
