@@ -1,10 +1,18 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routes import user, apartment, booking, review
+from routers.user_router import router as user_router
+from routers.apartment_router import router as apartment_router
+from routers.booking_router import router as booking_router
+from routers.review_router import router as review_router
+from dependencies import security
 
 # Initialize FastAPI app
-app = FastAPI(title="Student Housing API")
+app = FastAPI(
+    title="Student Housing API",
+    description="API for student housing application",
+    version="1.0.0"
+)
 
 # CORS middleware
 app.add_middleware(
@@ -15,11 +23,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Add security scheme to OpenAPI
+app.swagger_ui_init_oauth = {
+    "usePkceWithAuthorizationCodeGrant": True
+}
+
 # Include routers
-app.include_router(user.router)
-app.include_router(apartment.router)
-app.include_router(booking.router)
-app.include_router(review.router)
+app.include_router(user_router)
+app.include_router(apartment_router)
+app.include_router(booking_router)
+app.include_router(review_router)
 
 if __name__ == "__main__":
     import uvicorn

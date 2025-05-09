@@ -6,6 +6,7 @@ from pydantic import BaseModel
 import os
 from dotenv import load_dotenv
 from datetime import datetime
+from utils.logging import logger
 
 # Load environment variables
 load_dotenv()
@@ -17,7 +18,7 @@ if not SECRET_KEY:
 ALGORITHM = "HS256"
 
 class TokenData(BaseModel):
-    user_id: str
+    userId: str
     email: str
     name: str
     exp: datetime
@@ -32,6 +33,7 @@ class JWTBearer(HTTPBearer):
 
         if credentials:
             if not credentials.scheme == "Bearer":
+                logger.error("Invalid authentication scheme")
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail="Invalid authentication scheme",
@@ -47,41 +49,45 @@ class JWTBearer(HTTPBearer):
                         "verify_signature": True,
                         "verify_exp": True,
                         "verify_iat": True,
-                        "require": ["exp", "iat", "user_id", "email", "name"]
+                        "require": ["exp", "iat", "userId", "email", "name"]
                     }
                 )
                 
                 # Проверяем наличие всех необходимых полей
-                user_id: str = payload.get("user_id")
+                userId: str = payload.get("userId")
                 email: str = payload.get("email")
                 name: str = payload.get("name")
                 exp: datetime = payload.get("exp")
                 iat: datetime = payload.get("iat")
                 
-                if any(field is None for field in [user_id, email, name, exp, iat]):
+                if any(field is None for field in [userId, email, name, exp, iat]):
+                    logger.error("Invalid token payload - missing required fields")
                     raise HTTPException(
                         status_code=status.HTTP_401_UNAUTHORIZED,
                         detail="Invalid token payload",
                     )
                     
                 return TokenData(
-                    user_id=user_id,
+                    userId=userId,
                     email=email,
                     name=name,
                     exp=exp,
                     iat=iat
                 )
             except jwt.ExpiredSignatureError:
+                logger.error("Token has expired")
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail="Token has expired",
                 )
             except jwt.InvalidTokenError as e:
+                logger.error(f"Invalid token: {str(e)}")
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail=f"Invalid token: {str(e)}",
                 )
         else:
+            logger.error("Invalid authorization code")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid authorization code",

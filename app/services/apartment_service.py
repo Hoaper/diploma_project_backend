@@ -2,34 +2,37 @@ from typing import Optional, List
 from datetime import datetime
 from models.apartment import Apartment
 from repositories.apartment_repository import ApartmentRepository
-from services.base import BaseService
+from fastapi import HTTPException
 
-class ApartmentService(BaseService[Apartment]):
+class ApartmentService:
     def __init__(self, apartment_repository: ApartmentRepository):
         self.apartment_repository = apartment_repository
 
-    async def create(self, apartment: Apartment) -> Apartment:
-        apartment.created_at = datetime.utcnow()
-        apartment.updated_at = datetime.utcnow()
+    async def create_apartment(self, apartment: Apartment) -> Apartment:
         return await self.apartment_repository.create(apartment)
 
-    async def get_by_id(self, apartment_id: str) -> Optional[Apartment]:
-        return await self.apartment_repository.get_by_id(apartment_id)
+    async def get_apartment(self, apartment_id: str) -> Apartment:
+        apartment = await self.apartment_repository.get_by_id(apartment_id)
+        if not apartment:
+            raise HTTPException(status_code=404, detail="Apartment not found")
+        return apartment
 
-    async def get_all(self, skip: int = 0, limit: int = 100) -> List[Apartment]:
-        return await self.apartment_repository.get_all(skip, limit)
+    async def update_apartment(self, apartment_id: str, apartment_data: Apartment) -> Apartment:
+        existing_apartment = await self.apartment_repository.get_by_id(apartment_id)
+        if not existing_apartment:
+            raise HTTPException(status_code=404, detail="Apartment not found")
+        return await self.apartment_repository.update(apartment_id, apartment_data)
 
-    async def update(self, apartment_id: str, apartment: Apartment) -> Optional[Apartment]:
-        apartment.updated_at = datetime.utcnow()
-        return await self.apartment_repository.update(apartment_id, apartment)
+    async def delete_apartment(self, apartment_id: str) -> bool:
+        success = await self.apartment_repository.delete(apartment_id)
+        if not success:
+            raise HTTPException(status_code=404, detail="Apartment not found")
+        return True
 
-    async def delete(self, apartment_id: str) -> bool:
-        return await self.apartment_repository.delete(apartment_id)
-
-    async def get_by_owner(self, owner_id: str) -> List[Apartment]:
+    async def get_owner_apartments(self, owner_id: str) -> List[Apartment]:
         return await self.apartment_repository.get_by_owner(owner_id)
 
-    async def search(
+    async def search_apartments(
         self,
         min_price: Optional[int] = None,
         max_price: Optional[int] = None,
@@ -40,10 +43,16 @@ class ApartmentService(BaseService[Apartment]):
         limit: int = 100
     ) -> List[Apartment]:
         return await self.apartment_repository.search(
-            min_price, max_price, location, university, room_type, skip, limit
+            min_price=min_price,
+            max_price=max_price,
+            location=location,
+            university=university,
+            room_type=room_type,
+            skip=skip,
+            limit=limit
         )
 
-    async def get_nearby(
+    async def get_nearby_apartments(
         self,
         latitude: float,
         longitude: float,
@@ -52,10 +61,14 @@ class ApartmentService(BaseService[Apartment]):
         limit: int = 100
     ) -> List[Apartment]:
         return await self.apartment_repository.get_nearby(
-            latitude, longitude, radius_km, skip, limit
+            latitude=latitude,
+            longitude=longitude,
+            radius_km=radius_km,
+            skip=skip,
+            limit=limit
         )
 
-    async def get_available(
+    async def get_available_apartments(
         self,
         check_in: datetime,
         check_out: datetime,
@@ -63,16 +76,11 @@ class ApartmentService(BaseService[Apartment]):
         limit: int = 100
     ) -> List[Apartment]:
         return await self.apartment_repository.get_available(
-            check_in, check_out, skip, limit
+            check_in=check_in,
+            check_out=check_out,
+            skip=skip,
+            limit=limit
         )
 
-    async def get_promoted(self, skip: int = 0, limit: int = 100) -> List[Apartment]:
-        return await self.apartment_repository.get_promoted(skip, limit)
-
-    async def promote_apartment(self, apartment_id: str) -> Optional[Apartment]:
-        apartment = await self.apartment_repository.get_by_id(apartment_id)
-        if apartment:
-            apartment.is_promoted = True
-            apartment.updated_at = datetime.utcnow()
-            return await self.apartment_repository.update(apartment_id, apartment)
-        return None 
+    async def get_promoted_apartments(self, skip: int = 0, limit: int = 100) -> List[Apartment]:
+        return await self.apartment_repository.get_promoted(skip=skip, limit=limit) 

@@ -1,6 +1,22 @@
 from datetime import datetime
 from typing import Optional, List, Dict
-from pydantic import BaseModel, EmailStr, HttpUrl
+from pydantic import BaseModel, EmailStr, HttpUrl, Field
+from bson import ObjectId
+
+class PyObjectId(ObjectId):
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, v):
+        if not ObjectId.is_valid(v):
+            raise ValueError("Invalid ObjectId")
+        return ObjectId(v)
+
+    @classmethod
+    def __modify_schema__(cls, field_schema):
+        field_schema.update(type="string")
 
 class BudgetRange(BaseModel):
     min: int
@@ -12,10 +28,11 @@ class SocialLinks(BaseModel):
     facebook: Optional[str] = None
 
 class User(BaseModel):
-    user_id: str
-    name: str
-    surname: Optional[str] = None
+    userId: Optional[str] = Field(alias="_id", default=None)
+    name: Optional[str] = None
     email: EmailStr
+    password: Optional[str] = None
+    surname: Optional[str] = None
     gender: Optional[str] = None
     birth_date: Optional[datetime] = None
     phone: Optional[str] = None
@@ -24,15 +41,24 @@ class User(BaseModel):
     city: Optional[str] = None
     bio: Optional[str] = None
     university: Optional[str] = None
-    student_id_number: Optional[str] = None
+    studentId_number: Optional[str] = None
+    group: Optional[str] = None
     roommate_preferences: Optional[str] = None
     language_preferences: Optional[List[str]] = None
-    budget_range: Optional[BudgetRange] = None
-    avatar_url: Optional[HttpUrl] = None
-    id_document_url: Optional[HttpUrl] = None
-    document_verified: bool = False
-    social_links: Optional[SocialLinks] = None
-    created_at: datetime
-    last_login: datetime
-    is_landlord: bool = False
-    is_verified_landlord: bool = False 
+    budget_range: Optional[Dict[str, int]] = None
+    avatar_url: Optional[str] = None
+    id_document_url: Optional[str] = None
+    document_verified: Optional[bool] = False
+    social_links: Optional[Dict[str, str]] = None
+    is_landlord: Optional[bool] = False
+    is_verified_landlord: Optional[bool] = False
+    createdAt: Optional[datetime] = None
+    updatedAt: Optional[datetime] = None
+    last_login: Optional[datetime] = None
+
+    class Config:
+        allow_population_by_field_name = True
+        arbitrary_types_allowed = True
+        json_encoders = {
+            ObjectId: str
+        } 

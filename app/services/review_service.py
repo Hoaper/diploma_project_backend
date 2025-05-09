@@ -3,6 +3,7 @@ from datetime import datetime
 from models.review import Review, ReviewType
 from repositories.review_repository import ReviewRepository
 from services.base import BaseService
+from fastapi import HTTPException
 
 class ReviewService(BaseService[Review]):
     def __init__(self, review_repository: ReviewRepository):
@@ -62,4 +63,57 @@ class ReviewService(BaseService[Review]):
             review.is_verified = True
             review.updated_at = datetime.utcnow()
             return await self.review_repository.update(review_id, review)
-        return None 
+        return None
+
+    async def create_review(self, review: Review) -> Review:
+        return await self.review_repository.create(review)
+
+    async def get_review(self, review_id: str) -> Review:
+        review = await self.review_repository.get_by_id(review_id)
+        if not review:
+            raise HTTPException(status_code=404, detail="Review not found")
+        return review
+
+    async def update_review(self, review_id: str, review_data: Review) -> Review:
+        existing_review = await self.review_repository.get_by_id(review_id)
+        if not existing_review:
+            raise HTTPException(status_code=404, detail="Review not found")
+        return await self.review_repository.update(review_id, review_data)
+
+    async def delete_review(self, review_id: str) -> bool:
+        success = await self.review_repository.delete(review_id)
+        if not success:
+            raise HTTPException(status_code=404, detail="Review not found")
+        return True
+
+    async def get_target_reviews(
+        self,
+        target_id: str,
+        review_type: ReviewType,
+        skip: int = 0,
+        limit: int = 100
+    ) -> List[Review]:
+        return await self.review_repository.get_by_target(
+            target_id=target_id,
+            review_type=review_type,
+            skip=skip,
+            limit=limit
+        )
+
+    async def get_reviewer_reviews(
+        self,
+        reviewer_id: str,
+        skip: int = 0,
+        limit: int = 100
+    ) -> List[Review]:
+        return await self.review_repository.get_by_reviewer(
+            reviewer_id=reviewer_id,
+            skip=skip,
+            limit=limit
+        )
+
+    async def verify_review(self, review_id: str) -> Review:
+        review = await self.review_repository.get_by_id(review_id)
+        if not review:
+            raise HTTPException(status_code=404, detail="Review not found")
+        return await self.review_repository.verify_review(review_id) 

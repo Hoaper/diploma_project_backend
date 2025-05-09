@@ -11,8 +11,8 @@ class Address(BaseModel):
     landmark: Optional[str] = None
 
 class Apartment(BaseModel):
-    apartment_id: str
-    owner_id: str
+    apartmentId: str
+    ownerId: str
     apartment_name: str
     description: str
     address: Address

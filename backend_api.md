@@ -23,13 +23,13 @@ Authorization: Bearer <jwt_token>
 
 **Примечание:**  
 - Имя (`name`) и почта (`email`) сохраняются в БД при регистрации на фронтенде.  
-- При запросе `/profile` данные извлекаются из БД по `user_id`, который содержится в JWT токене.  
+- При запросе `/profile` данные извлекаются из БД по `userId`, который содержится в JWT токене.  
 - Остальные поля (`surname`, `phone`, `bio` и т.д.) будут `null` или пустыми, пока пользователь сам не заполнит их через `PATCH /profile`.
 
 ### ✅ Response JSON:
 ```json
 {
-  "user_id": "1",
+  "userId": "1",
   "name": "Diyar",
   "surname": "Amangeldi",
   "email": "diyar@gmail.com",
@@ -106,7 +106,7 @@ Authorization: Bearer <jwt_token>
 ```json
 {
   "message": "Profile created successfully.",
-  "user_id": "1"
+  "userId": "1"
 }
 ```
 
@@ -293,7 +293,7 @@ Authorization: Bearer <jwt_token>
     {
       "booking_id": "b102",
       "user": {
-        "user_id": "1",
+        "userId": "1",
         "name": "Andreas",
         "avatar_url": "https://cdn.domain.com/u334.jpg",
         "university": "AITU",
@@ -600,7 +600,7 @@ Authorization: Bearer <jwt_token>
 {
   "roommates": [
     {
-      "user_id": "u56789",
+      "userId": "u56789",
       "name": "Dastan",
       "bio": "Студент AITU, люблю тишину и порядок.",
       "languages": ["English", "Kazakh"]

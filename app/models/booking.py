@@ -11,9 +11,9 @@ class BookingStatus(str, Enum):
     COMPLETED = "completed"
 
 class Booking(BaseModel):
-    booking_id: str
-    apartment_id: str
-    user_id: str
+    bookingId: str
+    apartmentId: str
+    userId: str
     message: Optional[str] = None
     status: BookingStatus = BookingStatus.PENDING
     check_in_date: datetime
@@ -21,4 +21,4 @@ class Booking(BaseModel):
     created_at: datetime
     updated_at: datetime
     payment_status: str = "pending"  # pending, completed, refunded
-    payment_id: Optional[str] = None 
+    paymentId: Optional[str] = None 

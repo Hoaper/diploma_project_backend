@@ -8,9 +8,9 @@ class ReviewType(str, Enum):
     USER = "user"
 
 class Review(BaseModel):
-    review_id: str
-    reviewer_id: str
-    target_id: str  # apartment_id or user_id
+    reviewId: str
+    reviewerId: str
+    targetId: str  # apartmentId or userId
     review_type: ReviewType
     rating: conint(ge=1, le=5)  # Rating from 1 to 5
     text: str
