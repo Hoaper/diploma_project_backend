@@ -17,13 +17,24 @@ class ApartmentService:
             raise HTTPException(status_code=404, detail="Apartment not found")
         return apartment
 
-    async def update_apartment(self, apartment_id: str, apartment_data: Apartment) -> Apartment:
+    async def update_apartment(self, apartment_id: str, apartment_data: Apartment, user_id: str) -> Apartment:
         existing_apartment = await self.apartment_repository.get_by_id(apartment_id)
         if not existing_apartment:
             raise HTTPException(status_code=404, detail="Apartment not found")
+
+        if existing_apartment.ownerId != user_id:
+            raise HTTPException(status_code=403, detail="You are not the owner of this apartment")
+
         return await self.apartment_repository.update(apartment_id, apartment_data)
 
-    async def delete_apartment(self, apartment_id: str) -> bool:
+    async def delete_apartment(self, apartment_id: str, user_id: str) -> bool:
+        existing_apartment = await self.apartment_repository.get_by_id(apartment_id)
+        if not existing_apartment:
+            raise HTTPException(status_code=404, detail="Apartment not found")
+
+        if existing_apartment.ownerId != user_id:
+            raise HTTPException(status_code=403, detail="You are not the owner of this apartment")
+
         success = await self.apartment_repository.delete(apartment_id)
         if not success:
             raise HTTPException(status_code=404, detail="Apartment not found")

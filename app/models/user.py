@@ -31,6 +31,7 @@ class User(BaseModel):
     userId: Optional[str] = None
     name: Optional[str] = None
     email: EmailStr
+    admin: bool = False
     password: Optional[str] = None
     surname: Optional[str] = None
     gender: Optional[str] = None
@@ -59,6 +60,7 @@ class User(BaseModel):
     class Config:
         allow_population_by_field_name = True
         arbitrary_types_allowed = True
+        orm_mode = True
         json_encoders = {
             ObjectId: str
         }

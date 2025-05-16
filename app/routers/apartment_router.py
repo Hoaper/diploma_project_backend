@@ -1,23 +1,31 @@
-from fastapi import APIRouter, Depends, Query
+
+from fastapi import APIRouter, Depends, Query, HTTPException
 from typing import List, Optional
 from datetime import datetime
 from models.apartment import Apartment
 from services.apartment_service import ApartmentService
-from dependencies import get_apartment_service
+from dependencies import get_apartment_service, get_current_user
+from models.user import User
+
+
+router = APIRouter(prefix="/api/v1", tags=["apartments"])
 
 router = APIRouter(prefix="/api/v1", tags=["apartments"])
 
 @router.post("/apartments", response_model=Apartment)
 async def create_apartment(
     apartment: Apartment,
+    current_user: User = Depends(get_current_user),
     apartment_service: ApartmentService = Depends(get_apartment_service)
 ):
+    apartment.ownerId = current_user.userId  # Заменяем ownerId из токена
     return await apartment_service.create_apartment(apartment)
 
 @router.get("/apartments/{apartment_id}", response_model=Apartment)
 async def get_apartment(
     apartment_id: str,
-    apartment_service: ApartmentService = Depends(get_apartment_service)
+    apartment_service: ApartmentService = Depends(get_apartment_service),
+    current_user: User = Depends(get_current_user)  # ⬅️ авторизация
 ):
     return await apartment_service.get_apartment(apartment_id)
 
@@ -25,16 +33,21 @@ async def get_apartment(
 async def update_apartment(
     apartment_id: str,
     apartment_data: Apartment,
+    current_user: User = Depends(get_current_user),
     apartment_service: ApartmentService = Depends(get_apartment_service)
 ):
-    return await apartment_service.update_apartment(apartment_id, apartment_data)
+    return await apartment_service.update_apartment(apartment_id, apartment_data, current_user.userId)
+
 
 @router.delete("/apartments/{apartment_id}")
 async def delete_apartment(
     apartment_id: str,
+    current_user: User = Depends(get_current_user),
     apartment_service: ApartmentService = Depends(get_apartment_service)
 ):
-    return await apartment_service.delete_apartment(apartment_id)
+    await apartment_service.delete_apartment(apartment_id, current_user.userId)
+    return {"message": "Apartment deleted successfully."}
+
 
 @router.get("/apartments/owner/{owner_id}", response_model=List[Apartment])
 async def get_owner_apartments(

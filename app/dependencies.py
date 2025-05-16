@@ -56,6 +56,8 @@ def get_booking_service() -> BookingService:
 def get_review_service() -> ReviewService:
     return review_service
 
+
+
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Security(security)) -> User:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -74,4 +76,26 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Security(
     user = await user_service.get_by_id(userId)
     if user is None:
         raise credentials_exception
-    return user 
+    return user
+
+async def require_admin(current_user: User = Depends(get_current_user)):
+    if not current_user.admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied. Admins only.",
+        )
+
+async def require_owner_or_admin(
+    apartment_id: str,
+    current_user: User = Depends(get_current_user),
+    apartment_service: ApartmentService = Depends(get_apartment_service)
+):
+    if current_user.admin:
+        return  # доступ разрешён
+
+    apartment = await apartment_service.get_apartment(apartment_id)
+    if apartment is None:
+        raise HTTPException(status_code=404, detail="Apartment not found")
+
+    if apartment.ownerId != current_user.userId:
+        raise HTTPException(status_code=403, detail="Not authorized to access this apartment")

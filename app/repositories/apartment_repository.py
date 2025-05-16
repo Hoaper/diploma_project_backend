@@ -4,6 +4,7 @@ from models.apartment import Apartment
 from repositories.base import BaseRepository
 from motor.motor_asyncio import AsyncIOMotorClient
 from bson import ObjectId
+from fastapi.encoders import jsonable_encoder
 
 class ApartmentRepository(BaseRepository[Apartment]):
     def __init__(self, client: AsyncIOMotorClient):
@@ -12,7 +13,7 @@ class ApartmentRepository(BaseRepository[Apartment]):
 
     async def create(self, entity: Apartment) -> Apartment:
         try:
-            entity_dict = entity.dict()
+            entity_dict = jsonable_encoder(entity)  # <--- исправлено
             entity_dict["createdAt"] = datetime.utcnow()
             entity_dict["updatedAt"] = datetime.utcnow()
             result = await self.collection.insert_one(entity_dict)
@@ -25,11 +26,7 @@ class ApartmentRepository(BaseRepository[Apartment]):
     async def get_by_id(self, entity_id: str) -> Optional[Apartment]:
         try:
             result = await self.collection.find_one({"_id": ObjectId(entity_id)})
-            if result:
-                result["apartmentId"] = str(result["_id"])
-                del result["_id"]
-                return Apartment(**result)
-            return None
+            return Apartment.from_mongo(result)
         except Exception as e:
             print(e)
             return None
@@ -39,9 +36,7 @@ class ApartmentRepository(BaseRepository[Apartment]):
             cursor = self.collection.find().skip(skip).limit(limit)
             apartments = []
             async for document in cursor:
-                document["apartmentId"] = str(document["_id"])
-                del document["_id"]
-                apartments.append(Apartment(**document))
+                apartments.append(Apartment.from_mongo(document))
             return apartments
         except Exception as e:
             print(e)
@@ -50,17 +45,13 @@ class ApartmentRepository(BaseRepository[Apartment]):
     async def update(self, entity_id: str, entity: Apartment) -> Optional[Apartment]:
         try:
             entity_dict = entity.dict(exclude_unset=True)
-            entity_dict["updatedAt"] = datetime.utcnow()
+            entity_dict["updated_at"] = datetime.utcnow()
             result = await self.collection.find_one_and_update(
                 {"_id": ObjectId(entity_id)},
                 {"$set": entity_dict},
                 return_document=True
             )
-            if result:
-                result["apartmentId"] = str(result["_id"])
-                del result["_id"]
-                return Apartment(**result)
-            return None
+            return Apartment.from_mongo(result)
         except Exception as e:
             print(e)
             return None
@@ -75,12 +66,10 @@ class ApartmentRepository(BaseRepository[Apartment]):
 
     async def get_by_owner(self, owner_id: str) -> List[Apartment]:
         try:
-            cursor = self.collection.find({"owner_id": owner_id})
+            cursor = self.collection.find({"ownerId": owner_id})
             apartments = []
             async for document in cursor:
-                document["apartmentId"] = str(document["_id"])
-                del document["_id"]
-                apartments.append(Apartment(**document))
+                apartments.append(Apartment.from_mongo(document))
             return apartments
         except Exception as e:
             print(e)
@@ -101,7 +90,7 @@ class ApartmentRepository(BaseRepository[Apartment]):
             if min_price is not None:
                 query["price_per_month"] = {"$gte": min_price}
             if max_price is not None:
-                query["price_per_month"] = {"$lte": max_price}
+                query.setdefault("price_per_month", {})["$lte"] = max_price
             if location:
                 query["district_name"] = location
             if university:
@@ -112,9 +101,7 @@ class ApartmentRepository(BaseRepository[Apartment]):
             cursor = self.collection.find(query).skip(skip).limit(limit)
             apartments = []
             async for document in cursor:
-                document["apartmentId"] = str(document["_id"])
-                del document["_id"]
-                apartments.append(Apartment(**document))
+                apartments.append(Apartment.from_mongo(document))
             return apartments
         except Exception as e:
             print(e)
@@ -129,26 +116,23 @@ class ApartmentRepository(BaseRepository[Apartment]):
         limit: int = 100
     ) -> List[Apartment]:
         try:
-            # Using MongoDB's $geoNear operator for geospatial queries
             pipeline = [
                 {
                     "$geoNear": {
                         "near": {"type": "Point", "coordinates": [longitude, latitude]},
                         "distanceField": "distance",
-                        "maxDistance": radius_km * 1000,  # Convert km to meters
+                        "maxDistance": radius_km * 1000,
                         "spherical": True
                     }
                 },
                 {"$skip": skip},
                 {"$limit": limit}
             ]
-            
+
             cursor = self.collection.aggregate(pipeline)
             apartments = []
             async for document in cursor:
-                document["apartmentId"] = str(document["_id"])
-                del document["_id"]
-                apartments.append(Apartment(**document))
+                apartments.append(Apartment.from_mongo(document))
             return apartments
         except Exception as e:
             print(e)
@@ -166,13 +150,11 @@ class ApartmentRepository(BaseRepository[Apartment]):
                 "available_from": {"$lte": check_in},
                 "available_until": {"$gte": check_out}
             }
-            
+
             cursor = self.collection.find(query).skip(skip).limit(limit)
             apartments = []
             async for document in cursor:
-                document["apartmentId"] = str(document["_id"])
-                del document["_id"]
-                apartments.append(Apartment(**document))
+                apartments.append(Apartment.from_mongo(document))
             return apartments
         except Exception as e:
             print(e)
@@ -183,10 +165,8 @@ class ApartmentRepository(BaseRepository[Apartment]):
             cursor = self.collection.find({"is_promoted": True}).skip(skip).limit(limit)
             apartments = []
             async for document in cursor:
-                document["apartmentId"] = str(document["_id"])
-                del document["_id"]
-                apartments.append(Apartment(**document))
+                apartments.append(Apartment.from_mongo(document))
             return apartments
         except Exception as e:
             print(e)
-            return [] 
+            return []

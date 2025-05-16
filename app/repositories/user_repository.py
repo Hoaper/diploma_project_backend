@@ -27,6 +27,12 @@ class UserRepository(BaseRepository[User]):
             logger.error(f"Error getting user by ID {entity_id}: {str(e)}")
             return None
 
+    async def is_admin(self, user_id: str) -> bool:
+        user = await self.collection.find_one({"_id": ObjectId(user_id)})
+        if user and user.get("admin") is True:
+            return True
+        return False
+
     async def get_all(self, skip: int = 0, limit: int = 100) -> List[User]:
         cursor = self.collection.find().skip(skip).limit(limit)
         users = []

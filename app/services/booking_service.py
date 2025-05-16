@@ -4,16 +4,16 @@ from models.booking import Booking, BookingStatus
 from repositories.booking_repository import BookingRepository
 from fastapi import HTTPException
 
+
 class BookingService:
     def __init__(self, booking_repository: BookingRepository):
         self.booking_repository = booking_repository
 
     async def create_booking(self, booking: Booking) -> Booking:
-        # Check if the apartment is available for the requested dates
         is_available = await self.booking_repository.check_availability(
-            booking.apartment_id,
-            booking.check_in,
-            booking.check_out
+            booking.apartmentId,
+            booking.check_in_date,
+            booking.check_out_date
         )
         if not is_available:
             raise HTTPException(status_code=400, detail="Apartment is not available for the selected dates")
@@ -71,4 +71,4 @@ class BookingService:
             apartment_id,
             check_in,
             check_out
-        ) 
+        )

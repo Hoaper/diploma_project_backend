@@ -75,7 +75,7 @@ class BookingRepository(BaseRepository[Booking]):
 
     async def get_by_user(self, userId: str) -> List[Booking]:
         try:
-            cursor = self.collection.find({"user_id": userId})
+            cursor = self.collection.find({"userId": userId})
             bookings = []
             async for document in cursor:
                 document["bookingId"] = str(document["_id"])
@@ -88,7 +88,7 @@ class BookingRepository(BaseRepository[Booking]):
 
     async def get_by_apartment(self, apartment_id: str) -> List[Booking]:
         try:
-            cursor = self.collection.find({"apartment_id": apartment_id})
+            cursor = self.collection.find({"apartmentId": apartment_id})
             bookings = []
             async for document in cursor:
                 document["bookingId"] = str(document["_id"])
@@ -151,12 +151,12 @@ class BookingRepository(BaseRepository[Booking]):
         try:
             # Check if there are any overlapping bookings
             overlapping_booking = await self.collection.find_one({
-                "apartment_id": apartment_id,
+                "apartmentId": apartment_id,  # <-- исправлено
                 "status": {"$in": ["pending", "accepted"]},
                 "$or": [
                     {
-                        "check_in": {"$lte": check_out},
-                        "check_out": {"$gte": check_in}
+                        "check_in_date": {"$lte": check_out},
+                        "check_out_date": {"$gte": check_in}
                     }
                 ]
             })
